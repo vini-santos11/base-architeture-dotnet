@@ -17,22 +17,4 @@
       <ProjectReference Include="..\Application\Application.csproj" />
       <ProjectReference Include="..\CrossCutting.IoC\CrossCutting.IoC.csproj" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <Compile Remove="Configurations\Interfaces\**" />
-      <Compile Remove="WeatherForecast.cs" />
-    </ItemGroup>
-    
-    <ItemGroup>
-      <EmbeddedResource Remove="Configurations\Interfaces\**" />
-    </ItemGroup>
-    
-    <ItemGroup>
-      <Content Remove="Configurations\Interfaces\**" />
-    </ItemGroup>
-    
-    <ItemGroup>
-      <None Remove="Configurations\Interfaces\**" />
-    </ItemGroup>
-
 </Project>

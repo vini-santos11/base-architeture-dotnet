@@ -23,7 +23,6 @@ builder.Services.AddSingleton<IDatabaseConfiguration, DatabaseConfiguration>();
 var databaseConfig = builder.Services.BuildServiceProvider().GetRequiredService<IDatabaseConfiguration>();
 builder.Services.AddDatabaseSetup(databaseConfig);
 builder.Services.AddAutoMapperSetup();
-builder.Services.AddDependencyInjector();
 
 var app = builder.Build();
 
@@ -44,5 +43,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+await app.SeedRolesAndClaims();
 
 app.Run();
