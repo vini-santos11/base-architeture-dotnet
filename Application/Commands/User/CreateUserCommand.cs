@@ -6,6 +6,7 @@ public class CreateUserCommand : BaseCommand
 {
     public string Name { get; set; }
     public string Email { get; set; }
+    public string Document { get; set; }
     public string Password { get; set; }
     public string ConfirmPassword { get; set; }
 }
@@ -17,6 +18,10 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required")
             .MaximumLength(100).WithMessage("Name must be less than 100 characters");
+        
+        RuleFor(x => x.Document)
+            .NotEmpty().WithMessage("Document is required")
+            .MaximumLength(14).WithMessage("Document must be less than 14 characters");
 
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required")
