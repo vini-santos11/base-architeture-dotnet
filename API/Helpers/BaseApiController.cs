@@ -5,13 +5,13 @@ namespace API.Helpers;
 
 public abstract class BaseApiController : ControllerBase
 {
-    protected new IActionResult Response(object result = null, bool isValidOperation = true, string message = null)
+    protected new IActionResult Response(object result = null, bool isValidOperation = true, string message = null, bool success = true)
     {
         if (isValidOperation)
         {
             return Ok(new Response<object>
             {
-                Success = true,
+                Success = success,
                 Message = message,
                 Data = result
             });

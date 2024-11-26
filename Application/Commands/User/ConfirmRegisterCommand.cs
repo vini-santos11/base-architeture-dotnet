@@ -4,7 +4,7 @@ namespace Application.Commands.User;
 
 public class ConfirmRegisterCommand : BaseCommand
 {
-    public string Document { get; set; }
+    public string Email { get; set; }
     public string Code { get; set; }
 }
 
@@ -12,8 +12,9 @@ public class ConfirmRegisterCommandValidator : AbstractValidator<ConfirmRegister
 {
     public ConfirmRegisterCommandValidator()
     {
-        RuleFor(x => x.Document)
-            .NotEmpty().WithMessage("Document is required");
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email is required")
+            .EmailAddress().WithMessage("Invalid email address");
 
         RuleFor(x => x.Code)
             .NotEmpty().WithMessage("Code is required")

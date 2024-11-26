@@ -56,8 +56,10 @@ public class AuthenticationAppService : IAuthenticationAppService
 
     public async Task ConfirmRegister(ConfirmRegisterCommand command)
     {
-        var user = _userManager.Users.FirstOrDefault(x => x.Document == command.Document) ?? throw new Exception("User not found");
+        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
         if(user.RegisterCode != command.Code) throw new Exception("Invalid code");
+        
+        if(user.ExpirationRegisterCode < DateTime.UtcNow) throw new Exception("Code expired");
         
         var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var result = await _userManager.ConfirmEmailAsync(user, emailConfirmationToken);
@@ -66,6 +68,48 @@ public class AuthenticationAppService : IAuthenticationAppService
         
         var role = _roleManager.Roles.FirstOrDefault(x => x.Name.ToLower() == "User".ToLower()) ?? throw new Exception("Role User not found");
         await _userManager.AddToRoleAsync(user, role.Name);
+    }
+    
+    public async Task<string> ResendRegisterCode(RequestCodeCommand command)
+    {
+        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
+        user.RegisterCode = RandomStringCode(6);
+        user.ExpirationRegisterCode = DateTime.UtcNow.AddMinutes(15);
+        await _userManager.UpdateAsync(user);
+        
+        //todo send email with code
+        
+        return user.RegisterCode;
+    }
+
+    public async Task<string> RequestRecoverPassword(RequestCodeCommand command)
+    {
+        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
+        user.RecoveryCode = RandomStringCode(6);
+        user.ExpirationRecoveryCode = DateTime.UtcNow.AddMinutes(15);
+        await _userManager.UpdateAsync(user);
+        
+        //todo send email with code
+        
+        return user.RecoveryCode;
+    }
+
+    public async Task<bool> CheckRecoveryCodeIsValid(CheckRecoveryCodeCommand command)
+    {
+        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
+        if(user.RecoveryCode != command.RecoveryCode) return false;
+        
+        if(user.ExpirationRecoveryCode < DateTime.UtcNow) return false;
+        return true;
+    }
+    
+    public async Task RecoverPassword(RecoveryPasswordCommand command)
+    {
+        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, token, command.NewPassword);
+        
+        if (!result.Succeeded) throw new Exception(result.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}, {b}"));
     }
     
     private string RandomStringCode(int length)

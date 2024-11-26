@@ -4,6 +4,7 @@ public class UserQuery : BaseQuery
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
+    public string Email { get; set; }
     public string Document { get; set; }
     public string RegisterCode { get; set; }
     public DateTime ExpirationRegisterCode { get; set; }
