@@ -15,6 +15,13 @@ public class AuthenticationController : BaseApiController
         _authenticationAppService = authenticationAppService;
     }
     
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginCommand command)
+    {
+        var token = await _authenticationAppService.Login(command);
+        return Response(result: token, message: "User logged in successfully");
+    }
+    
     [HttpPost("register")]
     public async Task<IActionResult> Register(CreateUserCommand command)
     {

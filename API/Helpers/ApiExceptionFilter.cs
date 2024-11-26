@@ -1,6 +1,6 @@
 using System.Net;
-using Application.Exceptions;
 using Application.Models;
+using Enumerations.Helpers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;

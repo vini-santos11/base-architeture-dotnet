@@ -33,6 +33,7 @@ var databaseConfig = builder.Services.BuildServiceProvider().GetRequiredService<
 builder.Services.AddDatabaseSetup(databaseConfig);
 builder.Services.AddAutoMapperSetup();
 builder.Services.AddDependencyInjector();
+builder.Services.AddJwtConfig(builder.Configuration);
 
 var app = builder.Build();
 

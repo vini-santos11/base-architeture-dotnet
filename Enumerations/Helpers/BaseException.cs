@@ -1,4 +1,4 @@
-namespace Application.Exceptions;
+namespace Enumerations.Helpers;
 
 public class BaseException : Exception
 {

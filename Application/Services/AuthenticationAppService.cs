@@ -1,27 +1,50 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Principal;
+using System.Text;
 using Application.Commands.User;
 using Application.Interfaces;
+using Application.Models;
+using Application.Queries.User;
 using AutoMapper;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Services;
 
 public class AuthenticationAppService : IAuthenticationAppService
 {
+    private readonly TokenConfiguration _tokenConfiguration;
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<Role> _roleManager;
+    private readonly SignInManager<User> _signInManager;
     private readonly IUserStore<User> _userStore;
     private readonly IMapper _mapper;
     public AuthenticationAppService(
+        TokenConfiguration tokenConfiguration,
         UserManager<User> userManager,
         RoleManager<Role> roleManager,
         IUserStore<User> userStore,
+        SignInManager<User> signInManager,
         IMapper mapper)
     {
+        _tokenConfiguration = tokenConfiguration;
         _userManager = userManager;
         _roleManager = roleManager;
         _userStore = userStore;
+        _signInManager = signInManager;
         _mapper = mapper;
+    }
+
+    public async Task<UserTokenQuery> Login(LoginCommand command)
+    {
+        var user = _userManager.Users.FirstOrDefault(x => x.Document == command.Document) ?? throw new Exception("User not found");
+        if (!await _userManager.CheckPasswordAsync(user, command.Password)) throw new Exception("Invalid password");
+
+        var result = await _signInManager.PasswordSignInAsync(user, command.Password, false, false);
+        if (!result.Succeeded) throw new Exception("Invalid password");
+        return SetToken(user);
     }
     
     public async Task<string> Register(CreateUserCommand command)
@@ -117,5 +140,35 @@ public class AuthenticationAppService : IAuthenticationAppService
         Random random = new();
         const string chars = "0123456789";
         return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+
+    private UserTokenQuery SetToken(User user)
+    {
+        var expires = DateTime.UtcNow.AddMinutes(_tokenConfiguration.Minutes);
+        var permissions = new List<Claim>
+        {
+            new (ClaimTypes.Name , user.Name),
+            new (ClaimTypes.Email, user.Email),
+            new (ClaimTypes.Role, "User"),
+            new (ClaimTypes.Sid, user.Id.ToString()),
+            new (ClaimTypes.Expiration, expires.ToString())
+        };
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var securityToken = tokenHandler.CreateToken(new SecurityTokenDescriptor()
+        {
+            Subject = new ClaimsIdentity(new GenericIdentity(user.Name, "Name"), permissions),
+            Expires = expires,
+            NotBefore = DateTime.UtcNow,
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_tokenConfiguration.Secret)), SecurityAlgorithms.HmacSha256Signature)
+        });
+
+        return new UserTokenQuery
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Document = user.Document,
+            Email = user.Email,
+            Token = tokenHandler.WriteToken(securityToken),
+        };
     }
 }

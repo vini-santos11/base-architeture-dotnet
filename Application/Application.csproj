@@ -9,16 +9,20 @@
     <ItemGroup>
       <Compile Remove="Class1.cs" />
       <Compile Remove="Configurations\SwaggerSetup.cs" />
+      <Compile Remove="Models\Utilities.cs" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="AutoMapper" Version="13.0.1" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.20" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.20" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Domain\Domain.csproj" />
+      <ProjectReference Include="..\Enumerations\Enumerations.csproj" />
       <ProjectReference Include="..\Infra\Infra.csproj" />
     </ItemGroup>
 
