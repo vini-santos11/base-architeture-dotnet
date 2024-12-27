@@ -33,6 +33,7 @@ var databaseConfig = builder.Services.BuildServiceProvider().GetRequiredService<
 builder.Services.AddDatabaseSetup(databaseConfig);
 builder.Services.AddAutoMapperSetup();
 builder.Services.AddDependencyInjector();
+builder.Services.AddAuthorizationSetup();
 builder.Services.AddJwtConfig(builder.Configuration);
 
 var app = builder.Build();
@@ -53,6 +54,7 @@ app.UseHttpsRedirection();
 
 app.UseMiddleware<ForbiddenMiddleware>();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

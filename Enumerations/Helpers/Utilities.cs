@@ -191,9 +191,9 @@ public class Utilities
         }
         public static string GetClaimsEnumDescription(ClaimsEnum claimsEnum)
         {
-            FieldInfo fi = claimsEnum.GetType().GetField(claimsEnum.ToString());
+            var fi = claimsEnum.GetType().GetField(claimsEnum.ToString());
 
-            DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
+            var attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
                 typeof(DescriptionAttribute), false);
 
             if (attributes != null && attributes.Length > 0) return attributes[0].Description;
@@ -202,14 +202,12 @@ public class Utilities
 
         public static string GetEnumDescription(Enum value)
         {
-            FieldInfo fi = value.GetType().GetField(value.ToString());
+            var fi = value.GetType().GetField(value.ToString());
 
-            DescriptionAttribute[] attributes = fi.GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
+            var attributes = fi.GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
 
             if (attributes != null && attributes.Any())
-            {
                 return attributes.First().Description;
-            }
 
             return value.ToString();
         }

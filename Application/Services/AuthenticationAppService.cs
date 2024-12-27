@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
@@ -39,12 +40,12 @@ public class AuthenticationAppService : IAuthenticationAppService
 
     public async Task<UserTokenQuery> Login(LoginCommand command)
     {
-        var user = _userManager.Users.FirstOrDefault(x => x.Document == command.Document) ?? throw new Exception("User not found");
+        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
         if (!await _userManager.CheckPasswordAsync(user, command.Password)) throw new Exception("Invalid password");
 
         var result = await _signInManager.PasswordSignInAsync(user, command.Password, false, false);
         if (!result.Succeeded) throw new Exception("Invalid password");
-        return SetToken(user);
+        return await SetToken(user);
     }
     
     public async Task<string> Register(CreateUserCommand command)
@@ -142,21 +143,31 @@ public class AuthenticationAppService : IAuthenticationAppService
         return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
     }
 
-    private UserTokenQuery SetToken(User user)
+    private async Task<UserTokenQuery> SetToken(User user)
     {
         var expires = DateTime.UtcNow.AddMinutes(_tokenConfiguration.Minutes);
-        var permissions = new List<Claim>
+
+        var userRoles = await _userManager.GetRolesAsync(user);
+
+        var role = await _roleManager.FindByNameAsync(userRoles.FirstOrDefault()!) ?? throw new Exception("Role not found");
+
+        var roleClaims = await _roleManager.GetClaimsAsync(role);
+        
+        var claims = new List<Claim>
         {
             new (ClaimTypes.Name , user.Name),
-            new (ClaimTypes.Email, user.Email),
-            new (ClaimTypes.Role, "User"),
+            new (ClaimTypes.Email, user.Email!),
+            new (ClaimTypes.Role, role.Name!),
             new (ClaimTypes.Sid, user.Id.ToString()),
-            new (ClaimTypes.Expiration, expires.ToString())
+            new (ClaimTypes.Expiration, expires.ToString(CultureInfo.InvariantCulture))
         };
+
+        claims.AddRange(roleClaims);
+        
         var tokenHandler = new JwtSecurityTokenHandler();
         var securityToken = tokenHandler.CreateToken(new SecurityTokenDescriptor()
         {
-            Subject = new ClaimsIdentity(new GenericIdentity(user.Name, "Name"), permissions),
+            Subject = new ClaimsIdentity(new GenericIdentity(user.Name, "Name"), claims),
             Expires = expires,
             NotBefore = DateTime.UtcNow,
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_tokenConfiguration.Secret)), SecurityAlgorithms.HmacSha256Signature)
@@ -168,6 +179,7 @@ public class AuthenticationAppService : IAuthenticationAppService
             Name = user.Name,
             Document = user.Document,
             Email = user.Email,
+            Role = role.Name,
             Token = tokenHandler.WriteToken(securityToken),
         };
     }

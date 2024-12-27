@@ -1,11 +1,13 @@
 using API.Helpers;
 using Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class UserController : BaseApiController
 {
     private readonly IUserAppService _userAppService;
@@ -14,6 +16,7 @@ public class UserController : BaseApiController
         _userAppService = userAppService;
     }
 
+    [Authorize(Policy = "CreateUser")]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
