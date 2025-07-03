@@ -1,16 +1,16 @@
 using Application.Commands.User;
+using Application.Models;
 using Application.Queries.User;
 
 namespace Application.Interfaces;
 
 public interface IAuthenticationAppService
 {
-    Task<UserTokenQuery> Login(LoginCommand command);
-    Task<string> Register(CreateUserCommand command);
-    Task ConfirmRegister(ConfirmRegisterCommand command);
-    Task<string> ResendRegisterCode(RequestCodeCommand command);
-    Task<string> RequestRecoverPassword(RequestCodeCommand command);
-    Task<bool> CheckRecoveryCodeIsValid(CheckRecoveryCodeCommand command);
-    Task RecoverPassword(RecoveryPasswordCommand command);
-
+    Task<Response<UserTokenQuery>> Login(LoginCommand command);
+    Task<Response<string>> Register(CreateUserCommand command);
+    Task<Response<bool>> ConfirmRegister(ConfirmRegisterCommand command);
+    Task<Response<string>> ResendRegisterCode(RequestCodeCommand command);
+    Task<Response<string>> RequestRecoverPassword(RequestCodeCommand command);
+    Task<Response<bool>> CheckRecoveryCodeIsValid(CheckRecoveryCodeCommand command);
+    Task<Response<bool>> RecoverPassword(RecoveryPasswordCommand command);
 }

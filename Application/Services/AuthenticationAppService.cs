@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
@@ -38,105 +39,149 @@ public class AuthenticationAppService : IAuthenticationAppService
         _mapper = mapper;
     }
 
-    public async Task<UserTokenQuery> Login(LoginCommand command)
+    public async Task<Response<UserTokenQuery>> Login(LoginCommand command)
     {
-        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
-        if (!await _userManager.CheckPasswordAsync(user, command.Password)) throw new Exception("Invalid password");
-
+        var user = await _userManager.FindByEmailAsync(command.Email);
+        if (user is null) return Response.Fail<UserTokenQuery>("User not found", HttpStatusCode.Unauthorized);
+        
+        if (!await _userManager.CheckPasswordAsync(user, command.Password)) return Response.Fail<UserTokenQuery>("Invalid password", HttpStatusCode.Unauthorized);
+        
         var result = await _signInManager.PasswordSignInAsync(user, command.Password, false, false);
-        if (!result.Succeeded) throw new Exception("Invalid password");
-        return await SetToken(user);
-    }
-    
-    public async Task<string> Register(CreateUserCommand command)
-    {
-        try
-        {
-            var user = _mapper.Map<User>(command);
-            if(await _userManager.FindByEmailAsync(user.Email) is not null)
-                throw new Exception("Email already in use");
-            if(_userManager.Users.FirstOrDefault(x => x.Document == user.Document) is not null)
-                throw new Exception("Document already in use");
-
-            user.RegisterCode = RandomStringCode(6);
-            user.ExpirationRegisterCode = DateTime.UtcNow.AddMinutes(15);
-            user.CreatedAt = DateTime.UtcNow;
-            user.UpdateAt = DateTime.UtcNow;
-            
-            await _userStore.SetUserNameAsync(user, user.Document.ToLower(), CancellationToken.None);
-            
-            var result = await _userManager.CreateAsync(user, command.Password);
-            if (!result.Succeeded)
-                throw new Exception(result.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}, {b}"));
-            
-            //todo send email with code
-
-            return user.RegisterCode;
-        } catch (Exception ex)
-        {
-            throw new Exception(ex.Message);
-        }
+        if (!result.Succeeded) return Response.Fail<UserTokenQuery>("Login failed", HttpStatusCode.Unauthorized);
+        
+        var token = await SetToken(user);
+        return Response.Ok(token, "User logged in successfully");
     }
 
-    public async Task ConfirmRegister(ConfirmRegisterCommand command)
+    public async Task<Response<string>> Register(CreateUserCommand command)
     {
-        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
-        if(user.RegisterCode != command.Code) throw new Exception("Invalid code");
-        
-        if(user.ExpirationRegisterCode < DateTime.UtcNow) throw new Exception("Code expired");
-        
-        var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var result = await _userManager.ConfirmEmailAsync(user, emailConfirmationToken);
-        
-        if (!result.Succeeded) throw new Exception(result.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}, {b}"));
-        
-        var role = _roleManager.Roles.FirstOrDefault(x => x.Name.ToLower() == "User".ToLower()) ?? throw new Exception("Role User not found");
-        await _userManager.AddToRoleAsync(user, role.Name);
-    }
-    
-    public async Task<string> ResendRegisterCode(RequestCodeCommand command)
-    {
-        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
+        var user = _mapper.Map<User>(command);
+        if (await _userManager.FindByEmailAsync(user.Email) is not null)
+            return Response.Fail<string>("Email already in use");
+
+        if (_userManager.Users.FirstOrDefault(x => x.Document == user.Document) is not null)
+            return Response.Fail<string>("Document already in use");
+
         user.RegisterCode = RandomStringCode(6);
         user.ExpirationRegisterCode = DateTime.UtcNow.AddMinutes(15);
-        await _userManager.UpdateAsync(user);
+        user.CreatedAt = DateTime.UtcNow;
+        user.UpdateAt = DateTime.UtcNow;
+
+        await _userStore.SetUserNameAsync(user, user.Document.ToLower(), CancellationToken.None);
+
+        var result = await _userManager.CreateAsync(user, command.Password);
+        if (result.Succeeded) return Response.Ok(user.RegisterCode, "User registered successfully");
         
+        var errors = result.Errors.Select(e => e.Description).ToList();
+        return Response.Fail<string>(errors.First());
+
         //todo send email with code
-        
-        return user.RegisterCode;
+
     }
 
-    public async Task<string> RequestRecoverPassword(RequestCodeCommand command)
+    public async Task<Response<bool>> ConfirmRegister(ConfirmRegisterCommand command)
     {
-        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
+        var user = await _userManager.FindByEmailAsync(command.Email);
+        if (user is null)
+            return Response.Fail<bool>("User not found", HttpStatusCode.NotFound);
+
+        if (user.RegisterCode != command.Code)
+            return Response.Fail<bool>("Invalid code");
+
+        if (user.ExpirationRegisterCode < DateTime.UtcNow)
+            return Response.Fail<bool>("Code expired");
+
+        var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var result = await _userManager.ConfirmEmailAsync(user, emailConfirmationToken);
+
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(e => e.Description).ToList();
+            return Response.Fail<bool>(errors.First());
+        }
+
+        var role = _roleManager.Roles.FirstOrDefault(x => x.Name.ToLower() == "User".ToLower());
+        if (role is null)
+            return Response.Fail<bool>("Role User not found", HttpStatusCode.InternalServerError);
+
+        await _userManager.AddToRoleAsync(user, role.Name);
+        return Response.Ok(true, "User confirmed successfully");
+    }
+
+    public async Task<Response<string>> ResendRegisterCode(RequestCodeCommand command)
+    {
+        var user = await _userManager.FindByEmailAsync(command.Email);
+        if (user is null)
+            return Response.Fail<string>("User not found", HttpStatusCode.NotFound);
+
+        user.RegisterCode = RandomStringCode(6);
+        user.ExpirationRegisterCode = DateTime.UtcNow.AddMinutes(15);
+        var result = await _userManager.UpdateAsync(user);
+
+        if (result.Succeeded) return Response.Ok(user.RegisterCode, "Register code resent successfully");
+        
+        var errors = result.Errors.Select(e => e.Description).ToList();
+        return Response.Fail<string>(errors.First());
+
+        //todo send email with code
+
+    }
+
+    public async Task<Response<string>> RequestRecoverPassword(RequestCodeCommand command)
+    {
+        var user = await _userManager.FindByEmailAsync(command.Email);
+        if (user is null)
+            return Response.Fail<string>("User not found", HttpStatusCode.NotFound);
+
         user.RecoveryCode = RandomStringCode(6);
         user.ExpirationRecoveryCode = DateTime.UtcNow.AddMinutes(15);
-        await _userManager.UpdateAsync(user);
-        
+        var result = await _userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(e => e.Description).ToList();
+            return Response.Fail<string>(errors.First());
+        }
+
         //todo send email with code
-        
-        return user.RecoveryCode;
+
+        return Response.Ok(user.RecoveryCode, "Recovery code sent successfully");
     }
 
-    public async Task<bool> CheckRecoveryCodeIsValid(CheckRecoveryCodeCommand command)
+    public async Task<Response<bool>> CheckRecoveryCodeIsValid(CheckRecoveryCodeCommand command)
     {
-        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
-        if(user.RecoveryCode != command.RecoveryCode) return false;
-        
-        if(user.ExpirationRecoveryCode < DateTime.UtcNow) return false;
-        return true;
+        var user = await _userManager.FindByEmailAsync(command.Email);
+        if (user is null)
+            return Response.Fail<bool>("User not found", HttpStatusCode.NotFound);
+
+        if (user.RecoveryCode != command.RecoveryCode)
+            return Response.Ok(false, "Recovery code is invalid");
+
+        if (user.ExpirationRecoveryCode < DateTime.UtcNow)
+            return Response.Ok(false, "Recovery code expired");
+
+        return Response.Ok(true, "Recovery code is valid");
     }
-    
-    public async Task RecoverPassword(RecoveryPasswordCommand command)
+
+    public async Task<Response<bool>> RecoverPassword(RecoveryPasswordCommand command)
     {
-        var user = await _userManager.FindByEmailAsync(command.Email) ?? throw new Exception("User not found");
+        var user = await _userManager.FindByEmailAsync(command.Email);
+        if (user is null)
+            return Response.Fail<bool>("User not found", HttpStatusCode.NotFound);
+
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var result = await _userManager.ResetPasswordAsync(user, token, command.NewPassword);
-        
-        if (!result.Succeeded) throw new Exception(result.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}, {b}"));
+
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(e => e.Description).ToList();
+            return Response.Fail<bool>(errors.First());
+        }
+
+        return Response.Ok(true, "Password recovered successfully");
     }
-    
-    private string RandomStringCode(int length)
+
+    private static string RandomStringCode(int length)
     {
         Random random = new();
         const string chars = "0123456789";
@@ -152,7 +197,7 @@ public class AuthenticationAppService : IAuthenticationAppService
         var role = await _roleManager.FindByNameAsync(userRoles.FirstOrDefault()!) ?? throw new Exception("Role not found");
 
         var roleClaims = await _roleManager.GetClaimsAsync(role);
-        
+
         var claims = new List<Claim>
         {
             new (ClaimTypes.Name , user.Name),
@@ -163,7 +208,7 @@ public class AuthenticationAppService : IAuthenticationAppService
         };
 
         claims.AddRange(roleClaims);
-        
+
         var tokenHandler = new JwtSecurityTokenHandler();
         var securityToken = tokenHandler.CreateToken(new SecurityTokenDescriptor()
         {

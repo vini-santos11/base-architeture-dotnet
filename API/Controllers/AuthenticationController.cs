@@ -14,47 +14,53 @@ public class AuthenticationController : BaseApiController
     {
         _authenticationAppService = authenticationAppService;
     }
-    
+
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginCommand command)
     {
-        var token = await _authenticationAppService.Login(command);
-        return Response(result: token, message: "User logged in successfully");
+        var result = await _authenticationAppService.Login(command);
+        return !result.Success ? StatusCode(result.StatusCode, result) : Ok(result);
     }
-    
+
     [HttpPost("register")]
     public async Task<IActionResult> Register(CreateUserCommand command)
     {
-        var token = await _authenticationAppService.Register(command);
-        return Response(result: token, message: "User registered successfully");
+        var result = await _authenticationAppService.Register(command);
+        return !result.Success ? StatusCode(result.StatusCode, result) : Ok(result);
     }
-    
+
     [HttpPost("register/confirm")]
     public async Task<IActionResult> ConfirmRegister(ConfirmRegisterCommand command)
     {
-        await _authenticationAppService.ConfirmRegister(command);
-        return Response(message: "User confirmed successfully");
+        var result = await _authenticationAppService.ConfirmRegister(command);
+        return !result.Success ? StatusCode(result.StatusCode, result) : Ok(result);
     }
-    
+
+    [HttpPost("register/resend-code")]
+    public async Task<IActionResult> ResendRegisterCode(RequestCodeCommand command)
+    {
+        var result = await _authenticationAppService.ResendRegisterCode(command);
+        return !result.Success ? StatusCode(result.StatusCode, result) : Ok(result);
+    }
+
     [HttpPost("recover/password/request")]
     public async Task<IActionResult> RequestRecoverPassword(RequestCodeCommand command)
     {
         var result = await _authenticationAppService.RequestRecoverPassword(command);
-        return Response(result, message: "Recover password request sent successfully");
+        return !result.Success ? StatusCode(result.StatusCode, result) : Ok(result);
     }
-    
+
     [HttpPost("recover/password/check")]
     public async Task<IActionResult> CheckRecoveryCodeIsValid(CheckRecoveryCodeCommand command)
     {
-        var isValid = await _authenticationAppService.CheckRecoveryCodeIsValid(command);
-        return isValid ? Response(result: isValid, message: "Recovery code is valid") 
-                       : Response(success: false, result: isValid, message: "Recovery code is invalid");
+        var result = await _authenticationAppService.CheckRecoveryCodeIsValid(command);
+        return !result.Success ? StatusCode(result.StatusCode, result) : Ok(result);
     }
-    
+
     [HttpPost("recover/password")]
     public async Task<IActionResult> RecoverPassword(RecoveryPasswordCommand command)
     {
-        await _authenticationAppService.RecoverPassword(command);
-        return Response(message: "Password recovered successfully");
+        var result = await _authenticationAppService.RecoverPassword(command);
+        return !result.Success ? StatusCode(result.StatusCode, result) : Ok(result);
     }
 }
