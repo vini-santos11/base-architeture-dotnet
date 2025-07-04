@@ -1,7 +1,7 @@
 using Application.Interfaces;
-using Application.Queries.Claim;
 using Enumerations.Enums;
 using Enumerations.Helpers;
+using Models.Queries.Claim;
 
 namespace Application.Services;
 

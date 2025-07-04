@@ -1,4 +1,4 @@
-namespace Application.Queries;
+namespace Models.Queries;
 
 public class BaseQuery
 {

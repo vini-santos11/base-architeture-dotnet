@@ -1,8 +1,8 @@
 using API.Helpers;
-using Application.Commands.Role;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Models.Commands.Role;
 
 namespace API.Controllers;
 

@@ -1,7 +1,7 @@
 using API.Helpers;
-using Application.Commands.User;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Models.Commands.User;
 
 namespace API.Controllers;
 

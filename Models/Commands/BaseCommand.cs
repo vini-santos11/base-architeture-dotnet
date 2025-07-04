@@ -1,4 +1,4 @@
-namespace Application.Commands;
+namespace Models.Commands;
 
 public class BaseCommand
 {

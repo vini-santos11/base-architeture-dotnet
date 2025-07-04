@@ -1,7 +1,7 @@
-using Application.Commands.Claim;
 using FluentValidation;
+using Models.Commands.Claim;
 
-namespace Application.Commands.Role;
+namespace Models.Commands.Role;
 
 public class CreateRoleCommand : BaseCommand
 {

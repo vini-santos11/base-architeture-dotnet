@@ -1,9 +1,9 @@
-using Application.Commands.User;
 using Application.Interfaces;
-using Application.Queries.User;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces.Services;
+using Models.Commands.User;
+using Models.Queries.User;
 
 namespace Application.Services;
 

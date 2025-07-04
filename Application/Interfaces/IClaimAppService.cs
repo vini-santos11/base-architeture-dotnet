@@ -1,4 +1,4 @@
-using Application.Queries.Claim;
+using Models.Queries.Claim;
 
 namespace Application.Interfaces;
 

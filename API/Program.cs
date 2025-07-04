@@ -1,11 +1,11 @@
 using API.Helpers;
 using API.Middlewares;
-using Application.Commands;
 using Application.Configurations;
 using Application.Configurations.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using Models.Commands;
 
 var builder = WebApplication.CreateBuilder(args);
 

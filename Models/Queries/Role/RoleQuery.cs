@@ -1,4 +1,4 @@
-namespace Application.Queries.Role;
+namespace Models.Queries.Role;
 
 public class RoleQuery : BaseQuery
 {

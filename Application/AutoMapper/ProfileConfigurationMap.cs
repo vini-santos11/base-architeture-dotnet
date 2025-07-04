@@ -1,7 +1,7 @@
-using Application.Commands.User;
-using Application.Queries.User;
 using AutoMapper;
 using Domain.Entities;
+using Models.Commands.User;
+using Models.Queries.User;
 
 namespace Application.AutoMapper;
 

@@ -1,6 +1,6 @@
-using Application.Commands.Role;
 using Application.Models;
-using Application.Queries.Role;
+using Models.Commands.Role;
+using Models.Queries.Role;
 
 namespace Application.Interfaces;
 

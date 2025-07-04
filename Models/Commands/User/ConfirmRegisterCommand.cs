@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Application.Commands.User;
+namespace Models.Commands.User;
 
 public class ConfirmRegisterCommand : BaseCommand
 {

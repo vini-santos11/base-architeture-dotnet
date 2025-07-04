@@ -1,7 +1,7 @@
 using Enumerations.Helpers;
 using FluentValidation;
 
-namespace Application.Commands.User;
+namespace Models.Commands.User;
 
 public class CreateUserCommand : BaseCommand
 {

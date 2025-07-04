@@ -2,7 +2,7 @@ using Enumerations.Enums;
 using Enumerations.Helpers;
 using FluentValidation;
 
-namespace Application.Commands.Claim;
+namespace Models.Commands.Claim;
 
 public class ClaimCommand : BaseCommand
 {

@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossCutting.IoC", "CrossCu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enumerations", "Enumerations\Enumerations.csproj", "{57EB9B43-337F-437E-8413-2267666DF471}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{ADFDA67E-0397-4778-8CF3-EBF660E15EDB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{57EB9B43-337F-437E-8413-2267666DF471}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57EB9B43-337F-437E-8413-2267666DF471}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57EB9B43-337F-437E-8413-2267666DF471}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADFDA67E-0397-4778-8CF3-EBF660E15EDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADFDA67E-0397-4778-8CF3-EBF660E15EDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADFDA67E-0397-4778-8CF3-EBF660E15EDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADFDA67E-0397-4778-8CF3-EBF660E15EDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

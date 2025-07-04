@@ -1,5 +1,5 @@
-using Application.Commands.User;
-using Application.Queries.User;
+using Models.Commands.User;
+using Models.Queries.User;
 
 namespace Application.Interfaces;
 

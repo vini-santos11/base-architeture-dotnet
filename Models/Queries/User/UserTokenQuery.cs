@@ -1,4 +1,4 @@
-namespace Application.Queries.User;
+namespace Models.Queries.User;
 
 public class UserTokenQuery : BaseQuery
 {

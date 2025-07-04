@@ -1,4 +1,4 @@
-namespace Application.Queries.Claim;
+namespace Models.Queries.Claim;
 
 public class ClaimQuery : BaseQuery
 {

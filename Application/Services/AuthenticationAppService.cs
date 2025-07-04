@@ -4,14 +4,14 @@ using System.Net;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
-using Application.Commands.User;
 using Application.Interfaces;
 using Application.Models;
-using Application.Queries.User;
 using AutoMapper;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using Models.Commands.User;
+using Models.Queries.User;
 
 namespace Application.Services;
 
@@ -90,6 +90,9 @@ public class AuthenticationAppService : IAuthenticationAppService
 
         if (user.ExpirationRegisterCode < DateTime.UtcNow)
             return Response.Fail<bool>("Code expired");
+        
+        if(user.EmailConfirmed)
+            return Response.Ok(true, "User already confirmed");
 
         var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var result = await _userManager.ConfirmEmailAsync(user, emailConfirmationToken);
